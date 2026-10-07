@@ -8,7 +8,7 @@ open data straight from where it is published. Live at
 ## Where the data comes from
 
 The viewer has no data of its own and no server. Everything follows the open data
-scheme (`observatory-work/notes/open-data-scheme.md`):
+scheme ([SCHEME.md in hyderabad-data](https://github.com/hulf-observatory/hyderabad-data/blob/main/SCHEME.md)):
 
 | | URL | Holds |
 |---|---|---|
