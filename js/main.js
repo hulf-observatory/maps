@@ -530,7 +530,20 @@ function syncLoading() {
   document.getElementById('preview-view').classList.toggle('loading', !!(state.preview && state.preview.loading));
 }
 const queueLoading = () => { if (!loadingRaf) loadingRaf = requestAnimationFrame(syncLoading); };
-for (const ev of ['sourcedataloading', 'sourcedata', 'data', 'idle']) map.on(ev, queueLoading);
+for (const ev of ['sourcedataloading', 'sourcedata', 'data']) map.on(ev, queueLoading);
+// When the map is idle nothing is in flight, whatever isSourceLoaded() says: a tile request
+// cancelled mid-flight (slow cold tiles, view changed) can leave a source reporting
+// "not loaded" indefinitely, which would otherwise pin the indicator on.
+map.on('idle', () => {
+  if (loadingRaf) { cancelAnimationFrame(loadingRaf); loadingRaf = 0; }
+  for (const e of [...(state.preview ? [state.preview] : []), ...state.bench]) {
+    if (!e.loading) continue;
+    e.loading = false;
+    const chip = e.el && e.el.querySelector('.loading-chip');
+    if (chip) chip.hidden = true;
+  }
+  document.getElementById('preview-view').classList.remove('loading');
+});
 
 // ------------------------------------------------------------------ bench
 function renderBench() {
@@ -1100,4 +1113,4 @@ function initTourTriggers() {
 }
 
 // expose a tiny API for the headless check
-window.__viewer = { state, addToBench, startPreview, endPreview, removeFromBench, renderBench, refreshClasses, safeApply, placeSearch, DATA_BASE };
+window.__viewer = { state, map, addToBench, startPreview, endPreview, removeFromBench, renderBench, refreshClasses, safeApply, placeSearch, DATA_BASE };
