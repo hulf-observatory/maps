@@ -12,7 +12,7 @@
 //   node check/check.mjs --no-photon  # block photon.komoot.io: exercises the "unavailable" path
 //
 // Fails (exit 1) on: console errors, uncaught exceptions, failed or >=400 requests,
-// requests to hosts other than own origin, the data base (hulf-observatory.github.io),
+// requests to hosts other than own origin, the data base (data.hyderabad.urbanobservatory.in),
 // the tiles Worker (hyd-tiles.hulf-observatory.workers.dev), *.arcgisonline.com
 // (basemaps), photon.komoot.io (place search) and github.com /
 // objects.githubusercontent.com (download redirects), or a layer card showing an error.
