@@ -85,7 +85,7 @@ const evaluate = async (expr) => {
 const problems = [];
 const origin = new URL(BASE).origin;
 // open-data-scheme.md "Allowed external hosts in the headless check"
-const HOSTS = new Set(['hulf-observatory.github.io', 'hyd-tiles.hulf-observatory.workers.dev', 'photon.komoot.io',
+const HOSTS = new Set(['data.hyderabad.urbanobservatory.in', 'hulf-observatory.github.io', 'hyd-tiles.hulf-observatory.workers.dev', 'photon.komoot.io',
   'github.com', 'objects.githubusercontent.com', new URL(DATA_ABS).hostname]);
 const allowed = (u) => {
   if (u.startsWith('data:') || u.startsWith('blob:') || u === 'about:blank') return true;

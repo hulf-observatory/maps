@@ -280,7 +280,17 @@ body.embed #bench { left: var(--gap); }
 .pv-title { padding: 16px 18px 4px; display: flex; gap: 10px; align-items: flex-start; }
 .pv-title .sw { margin-top: 3px; }
 .pv-title h2 { margin: 0; font-size: var(--fs-card); font-weight: 600; line-height: 1.2; letter-spacing: -.01em; }
-.pv-title .loading-chip { margin-top: 5px; }
+/* While the previewed raster still fetches tiles the whole pane washes out and a ring + "Loading…"
+   sits in the middle; clicks pass through, so Back and Add keep working. */
+#preview-view { position: relative; }
+#preview-view.loading > * { opacity: .35; transition: opacity .2s; }
+#preview-view.loading::before, #preview-view.loading::after { position: absolute; left: 50%; pointer-events: none; z-index: 2; }
+#preview-view.loading::before { content: ''; top: 50%; width: 22px; height: 22px; margin: -26px 0 0 -11px; border-radius: 50%;
+  border: 2px solid var(--border-2); border-top-color: var(--ink); animation: pv-spin .8s linear infinite; }
+#preview-view.loading::after { content: 'Loading…'; top: 50%; transform: translateX(-50%); margin-top: 6px;
+  font-family: var(--font-narrow); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; font-weight: 600; color: var(--muted); }
+@keyframes pv-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { #preview-view.loading::before { animation: none; } }
 .pv-meta { padding: 0 18px; font-size: var(--fs-meta); color: var(--text-2); }
 .pv-desc { margin: 8px 0 0; font-size: var(--fs-body); line-height: 1.5; color: var(--text-2); }
 .tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 12px 0 4px; }

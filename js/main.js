@@ -526,6 +526,8 @@ function syncLoading() {
     const chip = e.el && e.el.querySelector('.loading-chip');
     if (chip) chip.hidden = !on;
   }
+  // the preview pane washes out as a whole while its raster loads (css: #preview-view.loading)
+  document.getElementById('preview-view').classList.toggle('loading', !!(state.preview && state.preview.loading));
 }
 const queueLoading = () => { if (!loadingRaf) loadingRaf = requestAnimationFrame(syncLoading); };
 for (const ev of ['sourcedataloading', 'sourcedata', 'data', 'idle']) map.on(ev, queueLoading);
@@ -768,6 +770,7 @@ function downloadLinks(m) {
 }
 
 function renderPreview() {
+  queueLoading();
   const pv = state.preview;
   const body = $('#pv-body');
   body.innerHTML = '';
@@ -805,7 +808,7 @@ function renderPreview() {
     pv.editing ? 'Hide style' : 'Edit style');
   // note: body.append(null) would literally print "null", so drop empties first
   body.append(...[
-    h('div', { class: 'pv-title' }, swatch(m, pv.settings), h('h2', {}, m.title || m.id), loadingChip(pv)),
+    h('div', { class: 'pv-title' }, swatch(m, pv.settings), h('h2', {}, m.title || m.id)),
     h('div', { class: 'pv-acts' }, addBtn, detailsBtn, styleBtn),
     pv.error ? h('div', { class: 'card-err', style: 'margin:10px 14px 0' }, pv.error) : null,
     pv.showDetails ? h('div', { class: 'pv-meta' }, m.description ? h('p', { class: 'pv-desc' }, m.description) : null,
