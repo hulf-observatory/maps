@@ -6,7 +6,7 @@
 // For local testing the base can be overridden, in this order:
 //   ?data=<url or path>      e.g. ?data=check/fixture/  (relative to the page)
 //   window.DATA_BASE = '…'   set in a <script> before js/main.js runs
-export const DEFAULT_DATA_BASE = 'https://hulf-observatory.github.io/hyderabad-data/';
+export const DEFAULT_DATA_BASE = 'https://data.hyderabad.urbanobservatory.in/';
 
 function pickBase() {
   let b = new URLSearchParams(location.search).get('data') || window.DATA_BASE || DEFAULT_DATA_BASE;

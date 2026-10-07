@@ -37,7 +37,7 @@ const PORT = FIXTURE ? 8125 : 8126;
 const BASE = urlArg || `http://127.0.0.1:${PORT}/`;
 // where the page reads its catalogue: the live DATA_BASE unless --fixture / --data
 // override it (the page takes the override as ?data=, see js/config.js)
-const DEFAULT_DATA_BASE = 'https://hulf-observatory.github.io/hyderabad-data/';
+const DEFAULT_DATA_BASE = 'https://data.hyderabad.urbanobservatory.in/';
 const DATA = dataArg || (FIXTURE ? 'check/fixture/' : null);
 const DATA_ABS = DATA ? new URL(DATA, BASE).href : DEFAULT_DATA_BASE;
 const page = (qs = '') => { const q = [DATA && 'data=' + DATA, qs].filter(Boolean).join('&'); return BASE + (q ? '?' + q : ''); };
