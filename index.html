@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Spatial Data Repository · Hyderabad Urban Observatory</title>
+<link rel="stylesheet" href="vendor/fonts/archivo.css">
+<link rel="stylesheet" href="vendor/fonts/outfit.css">
+<link rel="stylesheet" href="vendor/maplibre-gl.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header id="topbar">
+  <div class="brand">
+    <a class="brand-logo" href="https://hyderabad.urbanobservatory.in" target="_blank" rel="noopener" title="Hyderabad Urban Observatory">
+      <svg viewBox="0 0 100 100" aria-hidden="true"><defs><rect id="bH1" x="2" y="26" width="96" height="16" rx="6"/><rect id="bH2" x="2" y="58" width="96" height="16" rx="6"/><rect id="bV1" x="28" y="2" width="16" height="96" rx="6" transform="rotate(18 36 50)"/><rect id="bV2" x="56" y="2" width="16" height="96" rx="6" transform="rotate(18 64 50)"/><mask id="cH1"><rect width="100" height="100" fill="white"/><use href="#bV1" fill="black" stroke="black" stroke-width="4"/></mask><mask id="cV2"><rect width="100" height="100" fill="white"/><use href="#bH1" fill="black" stroke="black" stroke-width="4"/></mask><mask id="cH2"><rect width="100" height="100" fill="white"/><use href="#bV2" fill="black" stroke="black" stroke-width="4"/></mask><mask id="cV1"><rect width="100" height="100" fill="white"/><use href="#bH2" fill="black" stroke="black" stroke-width="4"/></mask></defs><g fill="#FFFFFF" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#bH1" mask="url(#cH1)"/><use href="#bV2" mask="url(#cV2)"/><use href="#bH2" mask="url(#cH2)"/><use href="#bV1" mask="url(#cV1)"/></g></svg>
+    </a>
+    <span class="brand-txt">
+      <button type="button" class="brand-wm" id="brandHome" title="Reset view">Spatial Data Repository</button>
+      <a class="brand-sub" href="https://hyderabad.urbanobservatory.in" target="_blank" rel="noopener">Hyderabad Urban Observatory</a>
+    </span>
+  </div>
+  <div class="spacer"></div>
+  <div class="topact">
+    <span id="status" class="status" aria-live="polite"></span>
+    <button type="button" id="btn-tour" title="Take the tour" aria-label="Take the tour">?</button>
+    <button type="button" id="btn-about" class="btn-plain" title="About this map" aria-expanded="false">About</button>
+    <button type="button" id="btn-reset" title="Start over" aria-label="Start over" aria-expanded="false">↻</button>
+  </div>
+  <div id="reset-card" hidden>
+    <p>Start over? Your layers will be cleared.</p>
+    <div class="acts">
+      <button type="button" id="reset-cancel" class="btn-edit">Cancel</button>
+      <button type="button" id="reset-confirm" class="btn-edit done">Start over</button>
+    </div>
+  </div>
+  <div id="about-card" hidden>
+    <h2>Spatial Data Repository</h2>
+    <p>Maps from the Hyderabad Urban Observatory's collection of spatial data for the HMDA region.</p>
+    <p>Pick a layer in the library to preview it. Add layers to the workbench to combine them, change their style and click features to read their attributes.</p>
+    <p>The data is published for viewing on the map only.</p>
+  </div>
+</header>
+
+<div id="app">
+  <!-- LIBRARY -->
+  <section id="library" class="col" aria-label="Library">
+    <div class="col-head">
+      <span class="eyebrow">Library</span>
+      <span class="col-acts">
+        <button type="button" class="txtbtn" id="lib-collapse-all">Collapse all</button>
+        <button type="button" class="iconbtn rail-toggle" data-col="library" title="Hide library" aria-label="Hide library">‹</button>
+      </span>
+    </div>
+    <div class="lib-search"><label class="searchfield"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20 L16 16"></path></svg><input id="lib-search" type="search" placeholder="Search layers" autocomplete="off" aria-label="Search layers"></label></div>
+    <div id="lib-list" class="col-body"></div>
+    <button type="button" class="rail-label" data-col="library" title="Show library">Library</button>
+  </section>
+
+  <!-- WORKBENCH / PREVIEW -->
+  <section id="bench" class="col" aria-label="Workbench">
+    <div id="bench-view">
+      <div class="col-head">
+        <span class="eyebrow">Workbench<span id="bench-count" class="count"></span></span>
+        <span class="col-acts">
+          <button type="button" class="iconbtn rail-toggle" data-col="bench" title="Hide workbench" aria-label="Hide workbench">‹</button>
+        </span>
+      </div>
+      <div class="bench-bulk">
+        <button type="button" class="txtbtn" id="bench-expand">Expand all</button>
+        <button type="button" class="txtbtn" id="bench-hide">Hide all</button>
+        <button type="button" class="txtbtn" id="bench-clear">Clear all</button>
+      </div>
+      <div id="bench-list" class="col-body"></div>
+      <div id="bench-empty" class="empty">Pick a layer in the library to preview it, then add it to the workbench.</div>
+    </div>
+    <div id="preview-view" hidden>
+      <div class="col-head">
+        <span class="eyebrow">Preview</span>
+        <span class="col-acts"><button type="button" class="txtbtn" id="pv-back">‹ Back</button></span>
+      </div>
+      <div id="pv-body" class="col-body"></div>
+    </div>
+    <button type="button" class="rail-label" data-col="bench" title="Show workbench">Workbench <span class="count" id="rail-count"></span></button>
+  </section>
+
+  <!-- MAP -->
+  <main id="map-wrap">
+    <div id="map"></div>
+    <div id="toolbar" class="tb">
+      <div class="tb-grp" id="tb-search-grp">
+        <button type="button" id="tb-search" title="Search a place" aria-label="Search a place" aria-expanded="false" aria-controls="ps-pop">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20 16 16"/></svg>
+        </button>
+        <div id="ps-pop" class="tb-menu ps-pop" role="search" hidden>
+          <label class="searchfield"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20 L16 16"></path></svg><input id="ps-input" type="search" placeholder="Search a place or area" aria-label="Search a place or area"></label>
+          <div id="ps-results" class="ps-results"></div>
+        </div>
+      </div>
+      <div class="tb-grp">
+        <button type="button" id="tb-basemap" title="Basemap" aria-label="Basemap" aria-haspopup="menu" aria-expanded="false">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 8l10 5 10-5z"/><path d="m2 12 10 5 10-5"/><path d="m2 16 10 5 10-5"/></svg>
+        </button>
+        <div id="bm-menu" class="tb-menu" role="menu" hidden></div>
+      </div>
+      <div class="tb-grp">
+        <button type="button" id="tb-measure" title="Measure distance" aria-label="Measure distance" aria-pressed="false">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 17 3l4 4L7 21z"/><path d="m7 13 2 2M10 10l2 2M13 7l2 2"/></svg>
+        </button>
+      </div>
+      <div class="tb-grp">
+        <button type="button" id="tb-zin" title="Zoom in" aria-label="Zoom in">+</button>
+        <button type="button" id="tb-zout" title="Zoom out" aria-label="Zoom out">−</button>
+      </div>
+      <div class="tb-grp">
+        <button type="button" id="tb-home" title="Back to the start view" aria-label="Back to the start view">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10"/></svg>
+        </button>
+      </div>
+    </div>
+    <div id="measure-box" class="mapcard" hidden>
+      <div class="eyebrow">Measure</div>
+      <div id="measure-val">Click the map to add points</div>
+      <div class="hint">Esc or the ruler button to stop</div>
+    </div>
+    <div id="sources">
+      <div id="sources-panel" class="mapcard" hidden></div>
+      <button type="button" id="sources-btn" title="Sources and attribution" aria-label="Sources and attribution" aria-expanded="false">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="6.2" r="0.4" fill="currentColor" stroke-width="1.6"/><path d="M12 10.5v7"/></svg>
+      </button>
+    </div>
+  </main>
+</div>
+
+<script src="vendor/maplibre-gl.js"></script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
