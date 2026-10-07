@@ -2,16 +2,20 @@
 // Headless check for the map viewer. No npm deps: drives Google Chrome over the
 // DevTools protocol using Node's built-in WebSocket (Node 22+).
 //
-//   node check/check.mjs              # against the real published/ data
-//   node check/check.mjs --fixture    # against check/fixture (small test layers)
+//   node check/check.mjs              # against the live open data (DATA_BASE in js/config.js)
+//   node check/check.mjs --fixture    # against check/fixture/layers.json: two small test layers
+//                                     # on the real hosts (a PMTiles vector on D, a raster on W)
+//   node check/check.mjs --data URL   # any other catalogue base (passed to the page as ?data=)
 //   node check/check.mjs --shots      # also write screenshots to screenshots/
 //   node check/check.mjs --url http://127.0.0.1:8124/   # use an already running server
 //   node check/check.mjs --no-phone   # skip the 390x844 phone-viewport pass
 //   node check/check.mjs --no-photon  # block photon.komoot.io: exercises the "unavailable" path
 //
 // Fails (exit 1) on: console errors, uncaught exceptions, failed or >=400 requests,
-// requests to hosts other than own origin, *.arcgisonline.com, photon.komoot.io (place
-// search), fonts.googleapis.com, fonts.gstatic.com, or a layer card showing an error.
+// requests to hosts other than own origin, the data base (hulf-observatory.github.io),
+// the tiles Worker (hyd-tiles.hulf-observatory.workers.dev), *.arcgisonline.com
+// (basemaps), photon.komoot.io (place search) and github.com /
+// objects.githubusercontent.com (download redirects), or a layer card showing an error.
 // Photon is a public service: if it is unreachable from this machine, its failed
 // requests are not counted and the place-search step checks the "unavailable" line.
 import { spawn } from 'node:child_process';
@@ -28,8 +32,15 @@ const SHOTS = argv.includes('--shots');
 const PHONE = !argv.includes('--no-phone');
 const NO_PHOTON = argv.includes('--no-photon');
 const urlArg = argv.includes('--url') ? argv[argv.indexOf('--url') + 1] : null;
+const dataArg = argv.includes('--data') ? argv[argv.indexOf('--data') + 1] : null;
 const PORT = FIXTURE ? 8125 : 8126;
 const BASE = urlArg || `http://127.0.0.1:${PORT}/`;
+// where the page reads its catalogue: the live DATA_BASE unless --fixture / --data
+// override it (the page takes the override as ?data=, see js/config.js)
+const DEFAULT_DATA_BASE = 'https://hulf-observatory.github.io/hyderabad-data/';
+const DATA = dataArg || (FIXTURE ? 'check/fixture/' : null);
+const DATA_ABS = DATA ? new URL(DATA, BASE).href : DEFAULT_DATA_BASE;
+const page = (qs = '') => { const q = [DATA && 'data=' + DATA, qs].filter(Boolean).join('&'); return BASE + (q ? '?' + q : ''); };
 const CHROME = process.env.CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const procs = [];
@@ -43,11 +54,9 @@ async function waitHttp(url, ms = 15000) {
 }
 
 if (!urlArg) {
-  const a = ['dev-server.py', '--port', String(PORT), '--quiet'];
-  if (FIXTURE) a.push('--fixture');
-  const p = spawn('python3', a, { cwd: ROOT, stdio: ['ignore', 'inherit', 'inherit'] });
+  const p = spawn('python3', ['dev-server.py', '--port', String(PORT), '--quiet'], { cwd: ROOT, stdio: ['ignore', 'inherit', 'inherit'] });
   procs.push(p);
-  await waitHttp(BASE + 'layers.json');
+  await waitHttp(BASE + 'index.html');
 }
 if (!existsSync(CHROME)) { console.error('Chrome not found at', CHROME); process.exit(2); }
 const dbgPort = 9300 + Math.floor(Math.random() * 500);
@@ -75,16 +84,19 @@ const evaluate = async (expr) => {
 
 const problems = [];
 const origin = new URL(BASE).origin;
+// open-data-scheme.md "Allowed external hosts in the headless check"
+const HOSTS = new Set(['hulf-observatory.github.io', 'hyd-tiles.hulf-observatory.workers.dev', 'photon.komoot.io',
+  'github.com', 'objects.githubusercontent.com', new URL(DATA_ABS).hostname]);
 const allowed = (u) => {
   if (u.startsWith('data:') || u.startsWith('blob:') || u === 'about:blank') return true;
   const x = new URL(u);
-  return x.origin === origin || x.hostname.endsWith('.arcgisonline.com') || x.hostname === 'photon.komoot.io'
-    || x.hostname === 'fonts.googleapis.com' || x.hostname === 'fonts.gstatic.com';
+  return x.origin === origin || HOSTS.has(x.hostname) || x.hostname.endsWith('.arcgisonline.com');
 };
 const isPhoton = (u) => typeof u === 'string' && u.startsWith('https://photon.komoot.io/');
 let photonDown = 0;   // failed Photon requests (the public geocoder unreachable from here)
 const reqs = new Map();
 let nReq = 0;
+const tileHits = new Map(); // tile_url prefix (up to {z}) -> 200 responses seen
 handlers.push((m) => {
   const p = m.params;
   if (m.method === 'Runtime.consoleAPICalled' && (p.type === 'error' || p.type === 'assert')) problems.push('console.' + p.type + ': ' + p.args.map((a) => a.value ?? a.description).join(' '));
@@ -97,6 +109,9 @@ handlers.push((m) => {
   if (m.method === 'Network.requestWillBeSent') {
     nReq++; reqs.set(p.requestId, p.request.url);
     if (!allowed(p.request.url)) problems.push('foreign host: ' + p.request.url);
+  }
+  if (m.method === 'Network.responseReceived' && p.response.status === 200) {
+    for (const k of tileHits.keys()) if (p.response.url.startsWith(k)) tileHits.set(k, tileHits.get(k) + 1);
   }
   if (m.method === 'Network.responseReceived' && p.response.status >= 400) {
     if (isPhoton(p.response.url)) photonDown++;
@@ -139,7 +154,8 @@ async function clickSel(sel) {
 }
 
 // ---------------------------------------------------------------- run
-const catalog = await (await fetch(BASE + 'layers.json')).json();
+const catalog = await (await fetch(DATA_ABS + 'layers.json', { cache: 'no-cache' })).json();
+console.log('data:', DATA_ABS);
 // display: false layers are data companions (encoded tiles); the library must not list them
 const layers = (catalog.layers || []).filter((l) => l.display !== false);
 const pick = (pred) => layers.find(pred);
@@ -152,6 +168,7 @@ const chosen = [
   pick((l) => l.kind === 'terrain'),
 ].filter(Boolean).filter((l, i, a) => a.indexOf(l) === i);
 console.log(`catalog: ${layers.length} layers; testing ${chosen.map((l) => l.id).join(', ') || '(none)'}`);
+for (const l of chosen) if (l.tile_url) tileHits.set(l.tile_url.split('{')[0], 0);
 
 // ---------------------------------------------------------------- swipe helpers
 // the raster to swipe: the 1854 Hyderabad plan over the old city when published
@@ -241,9 +258,11 @@ async function placeSearchEsc() {
   if (st.marker || st.pop) problems.push(`place search: Esc left ${st.marker ? 'the marker' : ''}${st.marker && st.pop ? ' and ' : ''}${st.pop ? 'the popover' : ''}`);
 }
 
-await send('Page.navigate', { url: BASE });
+await send('Page.navigate', { url: page() });
 await waitFor('document.body.dataset.ready === "1"');
 await sleep(1500); await idle();
+const dataBase = await evaluate('window.__viewer.DATA_BASE');
+if (dataBase !== DATA_ABS) problems.push(`page reads data from ${dataBase}, expected ${DATA_ABS}`);
 const libCount = await evaluate('document.querySelectorAll(".lyr").length');
 if (libCount !== layers.length) problems.push(`library shows ${libCount} rows, layers.json has ${layers.length}`);
 await shot('01-library-map');
@@ -265,6 +284,19 @@ const errs = await evaluate('window.__viewer.state.bench.filter(e => e.error).ma
 errs.forEach((e) => problems.push('card error: ' + e));
 const benchIds = await evaluate('window.__viewer.state.bench.map(e => e.meta.id)');
 console.log('bench:', benchIds.join(', '));
+// rasters must really draw: tiles arrived from the Worker, the source reports loaded,
+// and the card's "Loading…" chip has gone quiet again
+for (const l of chosen.filter((l) => l.tile_url)) {
+  const hits = tileHits.get(l.tile_url.split('{')[0]) || 0;
+  if (!hits) problems.push(`no tile of ${l.id} arrived from ${l.tile_url}`);
+  const st = JSON.parse(await evaluate(`(() => { const e = window.__viewer.state.bench.find(e => e.meta.id === ${JSON.stringify(l.id)});
+    const chip = e && e.el && e.el.querySelector('.loading-chip');
+    return JSON.stringify({ loaded: !!e && window.__map.isSourceLoaded(e.srcId), chip: !!chip, hidden: chip ? chip.hidden : null }); })()`));
+  if (!st.loaded) problems.push(`${l.id}: source not loaded after idle`);
+  if (!st.chip) problems.push(`${l.id}: raster card has no loading chip`);
+  else if (!st.hidden) problems.push(`${l.id}: loading chip still showing after idle`);
+  else console.log(`${l.id}: ${hits} tiles from the Worker, source loaded, chip hidden`);
+}
 // colour-by on the polygon layer
 if (pvLayer && (pvLayer.fields || []).length) {
   await evaluate(`(() => { const v = window.__viewer; v.state.bench.forEach(e => { e.open = false; });
@@ -599,7 +631,7 @@ if (swipeId) {
 }
 
 // embed mode + ?layers preload
-await send('Page.navigate', { url: BASE + '?embed=1&layers=' + chosen.map((l) => l.id).join(',') });
+await send('Page.navigate', { url: page('embed=1&layers=' + chosen.map((l) => l.id).join(',')) });
 await waitFor('document.body.dataset.ready === "1"');
 await sleep(1000); await idle();
 const embedOk = await evaluate(`getComputedStyle(document.getElementById('library')).display === 'none' && window.__viewer.state.bench.length === ${chosen.length}`);
@@ -610,15 +642,18 @@ await shot('07-embed');
 
 // ------------------------------------------------- reset = first-visit state
 {
-  await send('Page.navigate', { url: BASE });
+  await send('Page.navigate', { url: page() });
   await waitFor('document.body.dataset.ready === "1"');
   await sleep(1000); await idle();
-  await evaluate(`window.__viewer.addToBench(${JSON.stringify(chosen[0].id)})`);
+  // add a layer that is NOT in the default set, so there is something to confirm
+  const extra = chosen.find((l) => !l.default_visible) || layers.find((l) => !l.default_visible) || chosen[0];
+  await evaluate(`window.__viewer.addToBench(${JSON.stringify(extra.id)})`);
   await sleep(600);
   await clickSel('#btn-reset');
   await sleep(300);
-  if (await evaluate('document.getElementById("reset-card").hidden')) problems.push('reset showed no confirm although the bench was not the default');
-  await clickSel('#reset-confirm');
+  if (extra.default_visible) console.log('  (reset: every layer is default_visible; the confirm card cannot be exercised)');
+  else if (await evaluate('document.getElementById("reset-card").hidden')) problems.push('reset showed no confirm although the bench was not the default');
+  if (!(await evaluate('document.getElementById("reset-card").hidden'))) await clickSel('#reset-confirm');
   const defIds = layers.filter((l) => l.default_visible).map((l) => l.id).sort();
   await waitFor(`JSON.stringify(window.__viewer.state.bench.map(e => e.meta.id).sort()) === ${JSON.stringify(JSON.stringify(defIds))}`);
   if (await evaluate('new URLSearchParams(location.search).has("layers")')) problems.push('reset left ?layers= in the URL');
@@ -631,7 +666,7 @@ await shot('07-embed');
 // ------------------------------------------------- guided tour
 {
   await send('Page.removeScriptToEvaluateOnNewDocument', { identifier: tourGuard.identifier });
-  await send('Page.navigate', { url: BASE });
+  await send('Page.navigate', { url: page() });
   await waitFor('document.body.dataset.ready === "1"');
   const auto = await (async () => { const t = Date.now(); while (Date.now() - t < 8000) {
     if (await evaluate('!!document.querySelector(".tour-mask")')) return true; await sleep(200); } return false; })();
@@ -649,7 +684,7 @@ await shot('07-embed');
     await sleep(400);
     if (await evaluate('!!document.querySelector(".tour-mask")')) problems.push('Skip tour did not close the tour');
     // the tour returns on every reload (skip lasts for that page view only)
-    await send('Page.navigate', { url: BASE });
+    await send('Page.navigate', { url: page() });
     await waitFor('document.body.dataset.ready === "1"');
     const again = await (async () => { const t = Date.now(); while (Date.now() - t < 8000) {
       if (await evaluate('!!document.querySelector(".tour-mask")')) return true; await sleep(200); } return false; })();
@@ -673,7 +708,7 @@ await shot('07-embed');
 if (PHONE) {
   console.log('phone pass (390x844)');
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
-  await send('Page.navigate', { url: BASE });
+  await send('Page.navigate', { url: page() });
   await waitFor('document.body.dataset.ready === "1"');
   await sleep(1200); await idle();
   const pills = await evaluate('["library","bench"].every(id => document.getElementById(id).classList.contains("rail"))');

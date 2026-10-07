@@ -1,6 +1,7 @@
 // Map-side builders: turn a layers.json entry + user settings into MapLibre
 // sources and layers. Every function is defensive; callers wrap in try/catch.
 import { ensureIcon } from './icons.js';
+import { dataUrl } from './config.js';
 
 export const CAT_COLORS = ['#1F77B4', '#D95F02', '#2E7D32', '#B3261E', '#6A3D9A', '#8C564B', '#D4A017', '#17A5A5', '#E377C2', '#4D4D4D'];
 export const OTHER_COLOR = '#B8B3A6';
@@ -35,16 +36,20 @@ export function defaultSettings(meta) {
   };
 }
 
-// Absolute tile URL template with the version cache-buster.
-export function tileUrl(meta, catalog) {
-  let u = meta.tile_url;
-  if (!u) {
-    const ext = meta.kind === 'vector' ? 'mvt' : 'png';
-    u = (catalog.tiles_base || '/tiles/') + meta.id + '/{z}/{x}/{y}.' + ext;
-  }
-  if (u.startsWith('/')) u = location.origin + u;
-  if (meta.version != null && meta.version !== '') u += (u.includes('?') ? '&' : '?') + 'v=' + encodeURIComponent(meta.version);
-  return u;
+// Absolute tile URL template for raster / terrain / encoded layers. layers.json
+// carries it absolute (the tiles Worker, see js/config.js); a relative one is
+// resolved against DATA_BASE. Nothing is appended: the release is the version.
+export function tileUrl(meta) {
+  const u = meta.tile_url;
+  if (!u) throw new Error('no tile_url');
+  // URL resolution percent-encodes the {z}/{x}/{y} placeholders: restore them
+  return /^[a-z][a-z0-9+.-]*:/i.test(u) ? u : dataUrl(u).replace(/%7B/gi, '{').replace(/%7D/gi, '}');
+}
+// Vector layers are PMTiles archives read over range requests through the
+// pmtiles:// protocol (vendor/pmtiles.js, registered once in main.js).
+export function pmtilesUrl(meta) {
+  if (!meta.pmtiles_url) throw new Error('no pmtiles_url');
+  return 'pmtiles://' + dataUrl(meta.pmtiles_url);
 }
 
 function num(v, d) { const n = Number(v); return Number.isFinite(n) ? n : d; }
@@ -99,12 +104,14 @@ export function computeClasses(map, entry) {
 
 // Add source + layers for an entry. entry.key is unique per map instance
 // (bench: "b:<id>", preview: "p:<id>"). Returns the created layer ids.
-export async function buildEntry(map, entry, catalog) {
+export async function buildEntry(map, entry) {
   const meta = entry.meta, k = geomKind(meta), key = entry.key;
   const srcId = entry.srcId = 'src-' + key;
   const ids = [];
   const md = { entry: key };
-  const src = { tiles: [tileUrl(meta, catalog)] };
+  // rasters: a tile template; vectors: the PMTiles archive (MapLibre reads its
+  // TileJSON through the protocol, which then wins over these inline values)
+  const src = k === 'raster' || k === 'terrain' ? { tiles: [tileUrl(meta)] } : { url: pmtilesUrl(meta) };
   const minz = num(meta.minzoom, 0), maxz = num(meta.maxzoom, 14);
   src.minzoom = minz; src.maxzoom = maxz;
   if (validBounds(meta.bounds)) src.bounds = meta.bounds;

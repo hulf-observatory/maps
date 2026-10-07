@@ -1,6 +1,6 @@
 // Breadcrumb: HMDA › Corporation › Zone › Ward, bottom-left of the map (it
 // clears the open columns; main.js repositions it with the same measurement the
-// map padding uses). Driven by /nav/areas.json (written by tools/make_areas.py);
+// map padding uses). Driven by <DATA_BASE>nav/areas.json (written by tools/make_areas.py);
 // missing areas.json just means no breadcrumb. Loaded lazily on first idle.
 //
 // Each segment is TWO controls: the name (click = zoom to that area) and a caret
@@ -9,6 +9,8 @@
 // no menu: it just zooms to the whole extent. The ward menu carries a filter
 // input, since a zone can hold dozens of wards.
 // Point-in-polygon is even-odd ray casting over the wards' simplified rings.
+
+import { dataUrl } from './config.js';
 
 const h = (tag, cls, text) => {
   const el = document.createElement(tag);
@@ -36,7 +38,7 @@ export async function initBreadcrumb(map, { fitTo, loadAreas }) {
     // main.js shares one fetch of areas.json with the place search
     if (loadAreas) areas = await loadAreas();
     else {
-      const r = await fetch('nav/areas.json', { cache: 'no-cache' });
+      const r = await fetch(dataUrl('nav/areas.json'), { cache: 'no-cache' });
       if (!r.ok) return;
       areas = await r.json();
     }

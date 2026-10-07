@@ -1,10 +1,20 @@
-{"schema":1,"generated":"2026-09-19T00:00:00Z","tiles_base":"/tiles/","bounds_limit":[77.1,15.7,81.5,20.05],
-"groups":[{"id":"boundaries","title":"Boundaries","order":1},{"id":"housing","title":"Housing","order":2},{"id":"transport","title":"Transport","order":3},{"id":"historic","title":"Historic maps","order":4},{"id":"terrain","title":"Terrain","order":5}],
+{"schema":1,"generated":"2026-10-07T00:00:00Z","release":"test-0",
+"data_base":"https://hulf-observatory.github.io/hyderabad-data/","tiles_worker":"https://hyd-tiles.hulf-observatory.workers.dev",
+"bounds_limit":[77.1,15.7,81.5,20.05],
+"groups":[{"id":"test","title":"Test layers","order":1}],
 "layers":[
-{"id":"wards","title":"GHMC Wards 2025","group":"boundaries","order":1,"kind":"vector","geom":"polygon","source_layer":"wards","tile_url":"/tiles/wards/{z}/{x}/{y}.mvt","version":"t1","minzoom":9,"maxzoom":14,"bounds":[78.2,17.2,78.7,17.6],"feature_count":300,"fields":[{"name":"Ward_No","type":"number"}],"description":"300 wards of GHMC.","source_name":"GHMC","attribution":"GHMC","date":"2025","default_visible":true,"style":{"color":"#1F4E79","fill":"#1F4E79","fill_opacity":0.12,"line_width":1}},
-{"id":"slums","title":"GHMC Slums","group":"housing","order":1,"kind":"vector","geom":"polygon","source_layer":"slums","tile_url":"/tiles/slums/{z}/{x}/{y}.mvt","version":"t1","minzoom":9,"maxzoom":14,"bounds":[78.2,17.2,78.7,17.6],"feature_count":1351,"fields":[{"name":"ZONE","type":"string"},{"name":"slum_code","type":"number"}],"style":{"color":"#B3261E","fill":"#B3261E","fill_opacity":0.35,"line_width":0.5,"palette":null}},
-{"id":"bhk","title":"2BHK housing sites","group":"housing","order":2,"kind":"vector","geom":"point","source_layer":"bhk","tile_url":"/tiles/bhk/{z}/{x}/{y}.mvt","version":"t1","minzoom":9,"maxzoom":14,"bounds":[78.2,17.2,78.8,17.7],"feature_count":124,"fields":[{"name":"DIST","type":"string"},{"name":"TYPE","type":"string"},{"name":"MANDAL","type":"string"}],"attribution":"GHMC Housing","style":{"color":"#6A1B9A","icon":"house"}},
-{"id":"rail","title":"Railway lines","group":"transport","order":1,"kind":"vector","geom":"line","source_layer":"rail","tile_url":"/tiles/rail/{z}/{x}/{y}.mvt","version":"t1","minzoom":9,"maxzoom":14,"bounds":[78.0,17.0,79.0,17.9],"feature_count":52,"fields":[{"name":"OBJECTID","type":"number"}],"attribution":"OSM contributors","style":{"color":"#20242E","line_width":2}},
-{"id":"map1911","title":"Hyderabad 1911","group":"historic","order":1,"kind":"raster","geom":null,"tile_url":"/tiles/map1911/{z}/{x}/{y}.png","version":"t1","minzoom":11,"maxzoom":15,"bounds":[78.4267,17.3312,78.5053,17.4264],"attribution":"Survey of India 1911","date":"1911"},
-{"id":"dem","title":"Synthetic terrain (test)","group":"terrain","order":1,"kind":"terrain","geom":null,"tile_url":"/tiles/dem/{z}/{x}/{y}.png","version":"t1","minzoom":9,"maxzoom":11,"bounds":[78.2,17.2,78.8,17.6],"encoding":"terrarium","attribution":"test"}
+{"id":"synthetic","title":"Synthetic points (test)","group":"test","order":1,"kind":"vector","geom":"point","source_layer":"synthetic",
+ "pmtiles_url":"https://hulf-observatory.github.io/hyderabad-data/test/synthetic.pmtiles","version":"test-0",
+ "minzoom":0,"maxzoom":12,"bounds":[78.2,17.2,78.8,17.7],"center":[78.5,17.45],"feature_count":2000,
+ "fields":[{"name":"n","type":"number"}],
+ "description":"2000 random points over the city, used only to test the viewer against the open-data hosts.",
+ "source_name":"Hyderabad Urban Observatory","attribution":"HUO test data","date":"2026","licence":"CC0 1.0",
+ "default_visible":true,"style":{"color":"#1F4E79"},
+ "download":{"parquet":"https://hulf-observatory.github.io/hyderabad-data/test/synthetic.parquet"}},
+{"id":"synthetic_raster","title":"Synthetic raster (test)","group":"test","order":2,"kind":"raster","geom":null,
+ "tile_url":"https://hyd-tiles.hulf-observatory.workers.dev/r/test-0/synthetic_raster/{z}/{x}/{y}.webp","version":"test-0",
+ "minzoom":8,"maxzoom":10,"bounds":[78.0,16.96,79.05,17.90],"tile_size":256,
+ "description":"A synthetic picture over HMDA, served tile by tile from the Worker.",
+ "source_name":"Hyderabad Urban Observatory","attribution":"HUO test data","date":"2026","licence":"CC0 1.0",
+ "download":{"pmtiles":"https://hyd-tiles.hulf-observatory.workers.dev/r/test-0/synthetic_raster.pmtiles"}}
 ],"failed":[]}

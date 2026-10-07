@@ -10,6 +10,7 @@ import { yearControl, syncYearLayer } from './yearslider.js';
 import { initHeightHover } from './hoverheight.js';
 import { initSwipe } from './swipe.js';
 import { createPlaceSearch } from './place-search.js';
+import { DATA_BASE, dataUrl } from './config.js';
 
 let START = { center: [78.47, 17.40], zoom: 9.8 };
 const LIMIT = [77.1, 15.7, 81.5, 20.05];
@@ -55,12 +56,16 @@ const state = {
 };
 
 // ------------------------------------------------------------------ map
+// vector layers are PMTiles archives read over HTTP range requests (vendor/pmtiles.js)
+if (window.pmtiles) maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile);
+// the page may live under a path (GitHub Pages /maps/): assets stay relative to it
+const PAGE_DIR = location.href.replace(/[?#].*$/, '').replace(/[^/]*$/, '');
 const bl = LIMIT;
 const map = new maplibregl.Map({
   container: 'map',
   style: {
     version: 8,
-    glyphs: location.origin + '/vendor/glyphs/{fontstack}/{range}.pbf',
+    glyphs: PAGE_DIR + 'vendor/glyphs/{fontstack}/{range}.pbf',
     sources: {},
     layers: [{ id: 'paper', type: 'background', paint: { 'background-color': '#F4F1E8' } }],
   },
@@ -89,11 +94,11 @@ const swipe = initSwipe({
 
 // ------------------------------------------------------------------ catalog
 async function loadCatalog() {
-  const r = await fetch('layers.json', { cache: 'no-cache' });
+  const r = await fetch(dataUrl('layers.json'), { cache: 'no-cache' });
   if (!r.ok) throw new Error('layers.json ' + r.status);
   const c = await r.json();
   c.groups = Array.isArray(c.groups) ? c.groups : [];
-  c.layers = (Array.isArray(c.layers) ? c.layers : []).filter((l) => l && l.id && (l.tile_url || l.kind));
+  c.layers = (Array.isArray(c.layers) ? c.layers : []).filter((l) => l && l.id && (l.tile_url || l.pmtiles_url || l.kind));
   state.catalog = c;
   // byId keeps every layer (encoded data companions included, for the year slider
   // and hover readout); the library only ever lists display !== false layers.
@@ -194,7 +199,7 @@ async function mount(entry) {
     // started straight after page load used to fail with "Style is not done loading".
     // (isStyleLoaded() is NOT the right gate: it reads false whenever a tile is loading.)
     await mapLoaded;
-    await buildEntry(map, entry, state.catalog);
+    await buildEntry(map, entry);
     // buildEntry applies the settings before any classes exist, so a layer whose
     // default is a palette ("colour by" preset from style.palette) would stay in
     // its single base colour: compute the classes, then apply again.
@@ -284,7 +289,7 @@ async function bakedLegend(meta) {
   if (!meta.legend) return null;
   if (legendCache.has(meta.id)) return legendCache.get(meta.id);
   // plain fetch: 'force-cache' would pin a stale 404 from a run where the file was missing
-  const pr = fetch(meta.legend)
+  const pr = fetch(dataUrl(meta.legend))
     .then((r) => (r.ok ? r.json() : null))
     .catch(() => null);
   legendCache.set(meta.id, pr);
@@ -335,7 +340,7 @@ function styleKey(entry) {
 // Scanned plans (land use) carry their own printed legend, cropped from the sheet by the
 // bake into legends/<series>.webp. Shown in place of a colour key; tap to enlarge.
 function legendImage(m) {
-  const img = h('img', { src: m.legend_image, alt: `Legend for ${m.title || m.id}`, loading: 'lazy', class: 'legend-img' });
+  const img = h('img', { src: dataUrl(m.legend_image), alt: `Legend for ${m.title || m.id}`, loading: 'lazy', class: 'legend-img' });
   img.addEventListener('error', () => { fig.replaceWith(h('div', { class: 'note' }, 'Legend image unavailable.')); });
   const fig = h('button', { type: 'button', class: 'legend-thumb', title: 'Enlarge legend', 'aria-label': 'Enlarge legend',
     onclick: () => openLegendLightbox(m) }, img);
@@ -348,7 +353,7 @@ function openLegendLightbox(m) {
   const lb = h('div', { class: 'legend-lightbox', role: 'dialog', 'aria-label': `Legend: ${m.title || m.id}`,
     onclick: (e) => { if (e.target === lb) close(); } },
     h('figure', {},
-      h('img', { src: m.legend_image, alt: `Legend for ${m.title || m.id}` }),
+      h('img', { src: dataUrl(m.legend_image), alt: `Legend for ${m.title || m.id}` }),
       h('figcaption', {}, m.title || m.id),
       h('button', { type: 'button', class: 'iconbtn lb-close', 'aria-label': 'Close', onclick: close }, '×')));
   document.body.append(lb);
@@ -500,6 +505,31 @@ function refreshHeadBits(entry) {
   if (r) r.hidden = !changed(entry);
 }
 
+// ---------------------------------------------------------------- loading chip
+// Raster tiles come from the tiles Worker and can take a moment on a cold cache.
+// Each raster (and terrain) card and the preview carry a small "Loading…" chip
+// while MapLibre still has tiles in flight for that source; it hides once
+// isSourceLoaded() turns true. Driven by the map's source events, coalesced per frame.
+const isTiled = (meta) => { const k = geomKind(meta); return k === 'raster' || k === 'terrain'; };
+function loadingChip(entry) {
+  if (!isTiled(entry.meta)) return null;
+  return h('span', { class: 'loading-chip', role: 'status', hidden: !entry.loading }, h('i', { 'aria-hidden': 'true' }), 'Loading…');
+}
+let loadingRaf = 0;
+function syncLoading() {
+  loadingRaf = 0;
+  for (const e of [...(state.preview ? [state.preview] : []), ...state.bench]) {
+    if (!isTiled(e.meta)) continue;
+    const on = !!(e.srcId && e.visible && !e.suspended && map.getSource(e.srcId) && !map.isSourceLoaded(e.srcId));
+    if (on === !!e.loading) continue;
+    e.loading = on;
+    const chip = e.el && e.el.querySelector('.loading-chip');
+    if (chip) chip.hidden = !on;
+  }
+}
+const queueLoading = () => { if (!loadingRaf) loadingRaf = requestAnimationFrame(syncLoading); };
+for (const ev of ['sourcedataloading', 'sourcedata', 'data', 'idle']) map.on(ev, queueLoading);
+
 // ------------------------------------------------------------------ bench
 function renderBench() {
   const list = $('#bench-list');
@@ -533,7 +563,7 @@ function card(entry, i) {
       h('span', { class: 'grip', title: 'Drag to reorder', 'aria-hidden': 'true' }, '⋮⋮'),
       swatch(m, entry.settings),
       h('span', { class: 'card-name', onclick: () => { entry.open = !entry.open; if (!entry.open) entry.editing = false; renderBench(); } },
-        h('span', { class: 't', title: m.title || m.id }, m.title || m.id), h('span', { class: 'kind' }, kindLabel(m))),
+        h('span', { class: 't', title: m.title || m.id }, m.title || m.id), h('span', { class: 'kind' }, kindLabel(m)), loadingChip(entry)),
       reset, eye, move,
       h('button', { type: 'button', class: 'iconbtn', title: 'Remove', 'aria-label': 'Remove', onclick: () => removeFromBench(entry) }, '×'),
       // a plain word says what the button does; the chevron read as "expand", not "edit"
@@ -728,6 +758,15 @@ function previewFacts(pv) {
   return box;
 }
 
+const DOWNLOAD_KINDS = { parquet: ['GeoParquet', '.parquet'], pmtiles: ['PMTiles', '.pmtiles'], geojson: ['GeoJSON', '.geojson'], gpkg: ['GeoPackage', '.gpkg'], csv: ['CSV', '.csv'] };
+function downloadLinks(m) {
+  const d = m.download && typeof m.download === 'object' ? m.download : {};
+  return Object.entries(d).filter(([, u]) => typeof u === 'string' && /^https?:\/\//.test(u)).map(([k, u]) => {
+    const [name, ext] = DOWNLOAD_KINDS[k] || [k, ''];
+    return h('a', { href: u, download: '', rel: 'noopener' }, name, ext ? h('span', { class: 'ext' }, ' ' + ext) : null);
+  });
+}
+
 function renderPreview() {
   const pv = state.preview;
   const body = $('#pv-body');
@@ -740,11 +779,15 @@ function renderPreview() {
     [m.date || '', 'date'], [group, 'group'],
   ].filter(([v]) => v !== '');
   const rows = [
-    ['Source', m.source_name], ['Attribution', m.attribution],
+    ['Source', m.source_name], ['Attribution', m.attribution], ['Licence', m.licence],
     ['Zoom', m.minzoom != null ? `${m.minzoom} to ${m.maxzoom ?? ''}` : null],
   ].filter(([, v]) => v != null && v !== '');
   const dl = h('dl', {}, rows.map(([k, v]) => [h('dt', {}, k), h('dd', {}, v)]));
   if (m.source_url && /^https?:\/\//.test(m.source_url)) dl.append(h('dt', {}, 'Link'), h('dd', {}, h('a', { href: m.source_url, target: '_blank', rel: 'noopener noreferrer' }, 'Source page')));
+  // the open data behind the layer (open-data-scheme.md "download"): GeoParquet for
+  // vectors, the PMTiles archive for rasters. Cross-origin, so the link just opens.
+  const dlLinks = downloadLinks(m);
+  if (dlLinks.length) dl.append(h('dt', {}, 'Download'), h('dd', {}, dlLinks.flatMap((a, i) => (i ? [' · ', a] : [a]))));
   const fields = (m.fields || []).map((f) => f.name).filter(Boolean);
   if (fields.length) dl.append(h('dt', {}, 'Fields'), h('dd', {}, fields.join(', ')));
   const on = state.bench.some((e) => e.meta.id === m.id);
@@ -762,7 +805,7 @@ function renderPreview() {
     pv.editing ? 'Hide style' : 'Edit style');
   // note: body.append(null) would literally print "null", so drop empties first
   body.append(...[
-    h('div', { class: 'pv-title' }, swatch(m, pv.settings), h('h2', {}, m.title || m.id)),
+    h('div', { class: 'pv-title' }, swatch(m, pv.settings), h('h2', {}, m.title || m.id), loadingChip(pv)),
     h('div', { class: 'pv-acts' }, addBtn, detailsBtn, styleBtn),
     pv.error ? h('div', { class: 'card-err', style: 'margin:10px 14px 0' }, pv.error) : null,
     pv.showDetails ? h('div', { class: 'pv-meta' }, m.description ? h('p', { class: 'pv-desc' }, m.description) : null,
@@ -896,7 +939,7 @@ document.addEventListener('click', (e) => { if (!bmMenu.hidden && !bmMenu.contai
 // the observatory's own areas from nav/areas.json first, then OpenStreetMap places
 // from Photon. Photon gets the query text only. Not offered in ?embed=1.
 let areasP = null;
-const loadAreas = () => (areasP ||= fetch('nav/areas.json', { cache: 'no-cache' })
+const loadAreas = () => (areasP ||= fetch(dataUrl('nav/areas.json'), { cache: 'no-cache' })
   .then((r) => (r.ok ? r.json() : null)).catch(() => null));
 let placeLocal = [];
 function areaPlaces(a) {
@@ -1054,4 +1097,4 @@ function initTourTriggers() {
 }
 
 // expose a tiny API for the headless check
-window.__viewer = { state, addToBench, startPreview, endPreview, removeFromBench, renderBench, refreshClasses, safeApply, placeSearch };
+window.__viewer = { state, addToBench, startPreview, endPreview, removeFromBench, renderBench, refreshClasses, safeApply, placeSearch, DATA_BASE };

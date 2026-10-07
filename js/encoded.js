@@ -54,12 +54,12 @@ async function decodeBlob(blob, size) {
 }
 
 // Decoded ImageData for one encoded tile; null when the tile doesn't exist.
-// meta is the companion's layers.json entry (tile_url + version give the URL).
+// meta is the companion's layers.json entry (its absolute tile_url template).
 export function getTileData(meta, z, x, y) {
   const key = `${meta.id}/${z}/${x}/${y}`;
   const hit = lruGet(key);
   if (hit) return hit;
-  const url = tileUrl(meta, {}).replace('{z}', z).replace('{x}', x).replace('{y}', y);
+  const url = tileUrl(meta).replace('{z}', z).replace('{x}', x).replace('{y}', y);
   const pr = fetch(url)
     .then(async (r) => {
       if (!r.ok || r.status === 204) return null;

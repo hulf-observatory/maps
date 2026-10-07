@@ -1,17 +1,21 @@
 #!/usr/bin/env bash
-# The shared place search module (Photon + local areas) lives as three identical
-# copies, one per app, because each app deploys on its own:
-#   spatial data repository/js/place-search.js        (maps viewer; the reference copy)
-#   city timeline/place-search.js
-#   accessibility atlas/frontend/js/place-search.js
-# Edit one, copy it over the other two, then run this. Exit 1 if they differ.
-#   bash "spatial data repository/tools/check-place-search.sh"
+# The shared place search module (Photon + local areas) lives as identical copies,
+# one per app, because each app deploys on its own:
+#   maps/js/place-search.js            (this viewer; the reference copy)
+#   timeline/place-search.js           (City Timeline, the sibling repo next to this one)
+# A third copy, the Accessibility Atlas's frontend/js/place-search.js, lives in
+# Amruth's repo (amruthkiran94/hyderabad-urban-observatory) and is compared only
+# when that checkout is given as $ATLAS_PLACE_SEARCH.
+# Edit one, copy it over the others, then run this. Exit 1 if they differ.
+#   bash tools/check-place-search.sh
 set -u
-repo="$(cd "$(dirname "$0")/../.." && pwd)"
-ref="$repo/spatial data repository/js/place-search.js"
+here="$(cd "$(dirname "$0")/.." && pwd)"
+ref="$here/js/place-search.js"
 status=0
 if [ ! -f "$ref" ]; then echo "missing: $ref"; exit 1; fi
-for f in "$repo/city timeline/place-search.js" "$repo/accessibility atlas/frontend/js/place-search.js"; do
+others=("$here/../timeline/place-search.js")
+if [ -n "${ATLAS_PLACE_SEARCH:-}" ]; then others+=("$ATLAS_PLACE_SEARCH"); fi
+for f in "${others[@]}"; do
   if [ ! -f "$f" ]; then
     echo "missing: $f"; status=1
   elif ! cmp -s "$ref" "$f"; then
@@ -20,5 +24,5 @@ for f in "$repo/city timeline/place-search.js" "$repo/accessibility atlas/fronte
     status=1
   fi
 done
-if [ "$status" -eq 0 ]; then echo "place-search.js: the three copies are identical"; fi
+if [ "$status" -eq 0 ]; then echo "place-search.js: the copies are identical"; fi
 exit "$status"

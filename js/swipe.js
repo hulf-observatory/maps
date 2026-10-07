@@ -65,7 +65,7 @@ export function initSwipe({ map, state, mapPadding, onChange, escBlocked }) {
   async function build(sh) {
     const m = cmp;
     sh.pending = true;
-    try { await buildEntry(m, sh, state.catalog); }
+    try { await buildEntry(m, sh); }
     catch (err) { console.warn('swipe: layer failed', sh.meta.id, err); try { removeEntry(m, sh); } catch { /* ignore */ } }
     sh.pending = false;
     if (m === cmp) reconcile();
