@@ -10,7 +10,7 @@ import { yearControl, syncYearLayer } from './yearslider.js';
 import { initHeightHover } from './hoverheight.js';
 import { initSwipe } from './swipe.js';
 import { createPlaceSearch } from './place-search.js';
-import { DATA_BASE, dataUrl } from './config.js';
+import { DATA_BASE, dataUrl, SHOW_DOWNLOADS } from './config.js';
 
 let START = { center: [78.47, 17.40], zoom: 9.8 };
 const LIMIT = [77.1, 15.7, 81.5, 20.05];
@@ -536,6 +536,18 @@ for (const ev of ['sourcedataloading', 'sourcedata', 'data']) map.on(ev, queueLo
 // "not loaded" indefinitely, which would otherwise pin the indicator on.
 map.on('idle', () => {
   if (loadingRaf) { cancelAnimationFrame(loadingRaf); loadingRaf = 0; }
+  // A source that is still "not loaded" while the map is idle is stuck: MapLibre cancelled
+  // its tile requests (view or style changed mid-flight) and did not re-issue them, so the
+  // layer would stay blank until the next pan. Re-request its tiles, at most twice.
+  for (const e of [...(state.preview ? [state.preview] : []), ...state.bench]) {
+    if (!isTiled(e.meta) || !e.srcId || !e.visible || e.suspended) continue;
+    const src = map.getSource(e.srcId);
+    if (src && src.setTiles && src.tiles && !map.isSourceLoaded(e.srcId) && (e.nudges || 0) < 2) {
+      e.nudges = (e.nudges || 0) + 1;
+      src.setTiles([...src.tiles]);
+      return; // the reload fires sourcedata events; indicators follow from those
+    }
+  }
   for (const e of [...(state.preview ? [state.preview] : []), ...state.bench]) {
     if (!e.loading) continue;
     e.loading = false;
@@ -802,7 +814,7 @@ function renderPreview() {
   if (m.source_url && /^https?:\/\//.test(m.source_url)) dl.append(h('dt', {}, 'Link'), h('dd', {}, h('a', { href: m.source_url, target: '_blank', rel: 'noopener noreferrer' }, 'Source page')));
   // the open data behind the layer (open-data-scheme.md "download"): GeoParquet for
   // vectors, the PMTiles archive for rasters. Cross-origin, so the link just opens.
-  const dlLinks = downloadLinks(m);
+  const dlLinks = SHOW_DOWNLOADS ? downloadLinks(m) : [];
   if (dlLinks.length) dl.append(h('dt', {}, 'Download'), h('dd', {}, dlLinks.flatMap((a, i) => (i ? [' · ', a] : [a]))));
   const fields = (m.fields || []).map((f) => f.name).filter(Boolean);
   if (fields.length) dl.append(h('dt', {}, 'Fields'), h('dd', {}, fields.join(', ')));

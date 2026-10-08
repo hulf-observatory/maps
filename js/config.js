@@ -18,3 +18,7 @@ export const DATA_BASE = pickBase();
 // Absolute URL for a catalogue path. Already-absolute URLs (layers.json carries
 // absolute legend / legend_image / pmtiles_url / tile_url) pass through unchanged.
 export const dataUrl = (p) => new URL(String(p), DATA_BASE).href;
+
+// Download links (GeoParquet / PMTiles) in a layer's Details. Off for now; the catalogue
+// still carries the `download` fields, so switching this on brings them back.
+export const SHOW_DOWNLOADS = false;
