@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Page not found · Spatial Data Repository</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="stylesheet" href="/vendor/fonts/archivo.css">
+<link rel="stylesheet" href="/vendor/fonts/outfit.css">
+<style>
+/* Static 404 for GitHub Pages: served for any unknown path, so every URL here is absolute.
+   Tokens and type from observatory-work/DESIGN-SYSTEM.md (same values as index.html). */
+:root {
+  --canvas: #EDEEF0; --ink: #111827; --text-2: #374151; --muted: #6B7280;
+  --font-ui: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+  --font-narrow: 'Archivo Narrow', 'Arial Narrow', Arial, sans-serif;
+  --font-brand: 'Outfit', 'Helvetica Neue', Arial, sans-serif;
+}
+html, body { margin: 0; min-height: 100%; background: var(--canvas); color: var(--ink); font: 14px/1.5 var(--font-ui); }
+body { box-sizing: border-box; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; padding: 16px; }
+@media (min-width: 768px) { body { padding: 48px; } }
+header { display: flex; align-items: center; gap: 12px; }
+header svg { width: 40px; height: 40px; flex: none; }
+.brand { display: flex; flex-direction: column; gap: 3px; text-decoration: none; color: var(--ink); }
+.brand-wm { font: 600 17px/1.1 var(--font-narrow); letter-spacing: 2px; text-transform: uppercase; }
+.brand-sub { font: 600 11px/1.1 var(--font-narrow); letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+main { flex: 1; display: flex; flex-direction: column; justify-content: center; max-width: 640px; padding: 48px 0; }
+h1 { font: 400 24px/1.25 var(--font-brand); letter-spacing: .1em; text-transform: uppercase; margin: 0 0 8px; }
+p { margin: 0 0 24px; color: var(--text-2); }
+@media (min-width: 768px) { h1 { font-size: 30px; } p { font-size: 16px; } }
+nav { display: flex; flex-wrap: wrap; gap: 28px; }
+nav a { font: 500 12px var(--font-narrow); letter-spacing: .2em; text-transform: uppercase; color: var(--ink);
+  text-decoration: none; padding: 4px 0; border-bottom: 1px solid transparent; transition: border-color .2s ease; }
+nav a:hover, nav a:focus-visible { border-bottom-color: var(--ink); }
+</style>
+</head>
+<body>
+<header>
+  <a href="/" aria-label="Spatial Data Repository home"><svg viewBox="0 0 100 100" aria-hidden="true"><defs><rect id="bH1" x="2" y="26" width="96" height="16" rx="6"/><rect id="bH2" x="2" y="58" width="96" height="16" rx="6"/><rect id="bV1" x="28" y="2" width="16" height="96" rx="6" transform="rotate(18 36 50)"/><rect id="bV2" x="56" y="2" width="16" height="96" rx="6" transform="rotate(18 64 50)"/><mask id="cH1"><rect width="100" height="100" fill="white"/><use href="#bV1" fill="black" stroke="black" stroke-width="4"/></mask><mask id="cV2"><rect width="100" height="100" fill="white"/><use href="#bH1" fill="black" stroke="black" stroke-width="4"/></mask><mask id="cH2"><rect width="100" height="100" fill="white"/><use href="#bV2" fill="black" stroke="black" stroke-width="4"/></mask><mask id="cV1"><rect width="100" height="100" fill="white"/><use href="#bH2" fill="black" stroke="black" stroke-width="4"/></mask></defs><g fill="#FFFFFF" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#bH1" mask="url(#cH1)"/><use href="#bV2" mask="url(#cV2)"/><use href="#bH2" mask="url(#cH2)"/><use href="#bV1" mask="url(#cV1)"/></g></svg></a>
+  <a class="brand" href="/"><span class="brand-wm">Spatial Data Repository</span><span class="brand-sub">Hyderabad Urban Observatory</span></a>
+</header>
+<main>
+  <h1>Page not found</h1>
+  <p>There is nothing at this address; the page may have moved or the link may be out of date.</p>
+  <nav aria-label="Where to go instead">
+    <a href="/">Back to the map viewer</a>
+    <a href="https://hyderabad.urbanobservatory.in">Hyderabad Urban Observatory</a>
+  </nav>
+</main>
+</body>
+</html>
