@@ -6,10 +6,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Spatial Data Repository · Hyderabad Urban Observatory</title>
 <meta name="description" content="Browse the Hyderabad Urban Observatory's open spatial layers on a map.">
-<link rel="stylesheet" href="vendor/fonts/archivo.css">
+<link rel="stylesheet" href="vendor/fonts/lato.css">
 <link rel="stylesheet" href="vendor/fonts/outfit.css">
 <link rel="stylesheet" href="vendor/maplibre-gl.css">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/standard.css">
 </head>
 <body>
 
@@ -29,6 +30,17 @@
     <button type="button" id="btn-tour" title="Take the tour" aria-label="Take the tour">?</button>
     <button type="button" id="btn-about" class="btn-plain" title="About this map" aria-expanded="false">About</button>
     <button type="button" id="btn-reset" title="Start over" aria-label="Start over" aria-expanded="false">↻</button>
+    <div class="obs-appmenu">
+      <button type="button" id="btn-sitemenu" title="Observatory" aria-label="Observatory menu" aria-expanded="false" aria-controls="sitemenu"><span class="obs-burger-i"></span></button>
+      <nav class="obs-appmenu-card" id="sitemenu" aria-label="Observatory" hidden>
+        <span class="lab">Hyderabad Urban Observatory</span>
+        <a href="https://hyderabad.urbanobservatory.in/">Home</a>
+        <a href="https://hyderabad.urbanobservatory.in/tools/">Tools</a>
+        <a href="https://hyderabad.urbanobservatory.in/stories/">Stories</a>
+        <a href="https://hyderabad.urbanobservatory.in/data/">Data sources</a>
+        <a href="https://hyderabad.urbanobservatory.in/about">About the Observatory</a>
+      </nav>
+    </div>
   </div>
   <div id="reset-card" hidden>
     <p>Start over? Your layers will be cleared.</p>
@@ -138,5 +150,15 @@
 <script src="vendor/maplibre-gl.js"></script>
 <script src="vendor/pmtiles.js"></script>
 <script type="module" src="js/main.js"></script>
+<script>
+  // Observatory menu in the app bar: the button toggles the link card; Escape or a click outside closes it
+  (() => {
+    const b = document.getElementById('btn-sitemenu'), m = document.getElementById('sitemenu');
+    const set = (open) => { m.hidden = !open; b.setAttribute('aria-expanded', open); };
+    b.addEventListener('click', () => set(m.hidden));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !m.hidden) { set(false); b.focus(); } });
+    document.addEventListener('pointerdown', (e) => { if (!m.hidden && !m.contains(e.target) && !b.contains(e.target)) set(false); });
+  })();
+</script>
 </body>
 </html>
