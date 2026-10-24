@@ -5,48 +5,60 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Page not found · Spatial Data Repository</title>
 <meta name="robots" content="noindex">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="stylesheet" href="/vendor/fonts/archivo.css">
-<link rel="stylesheet" href="/vendor/fonts/outfit.css">
+<link rel="icon" type="image/svg+xml" href="/maps/favicon.svg">
 <style>
-/* Static 404 for GitHub Pages: served for any unknown path, so every URL here is absolute.
-   Tokens and type from observatory-work/DESIGN-SYSTEM.md (same values as index.html). */
-:root {
-  --canvas: #EDEEF0; --ink: #111827; --text-2: #374151; --muted: #6B7280;
-  --font-ui: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
-  --font-narrow: 'Archivo Narrow', 'Arial Narrow', Arial, sans-serif;
-  --font-brand: 'Outfit', 'Helvetica Neue', Arial, sans-serif;
-}
-html, body { margin: 0; min-height: 100%; background: var(--canvas); color: var(--ink); font: 14px/1.5 var(--font-ui); }
-body { box-sizing: border-box; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; padding: 16px; }
-@media (min-width: 768px) { body { padding: 48px; } }
-header { display: flex; align-items: center; gap: 12px; }
-header svg { width: 40px; height: 40px; flex: none; }
-.brand { display: flex; flex-direction: column; gap: 3px; text-decoration: none; color: var(--ink); }
-.brand-wm { font: 600 17px/1.1 var(--font-narrow); letter-spacing: 2px; text-transform: uppercase; }
-.brand-sub { font: 600 11px/1.1 var(--font-narrow); letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
-main { flex: 1; display: flex; flex-direction: column; justify-content: center; max-width: 640px; padding: 48px 0; }
-h1 { font: 400 24px/1.25 var(--font-brand); letter-spacing: .1em; text-transform: uppercase; margin: 0 0 8px; }
-p { margin: 0 0 24px; color: var(--text-2); }
-@media (min-width: 768px) { h1 { font-size: 30px; } p { font-size: 16px; } }
-nav { display: flex; flex-wrap: wrap; gap: 28px; }
-nav a { font: 500 12px var(--font-narrow); letter-spacing: .2em; text-transform: uppercase; color: var(--ink);
-  text-decoration: none; padding: 4px 0; border-bottom: 1px solid transparent; transition: border-color .2s ease; }
-nav a:hover, nav a:focus-visible { border-bottom-color: var(--ink); }
+/* Static 404 for GitHub Pages: served for any unknown path under /maps/, so every URL here is absolute.
+   Visual standard (24 Oct 2026): the same header, footer and type as the rest of the site; see
+   observatory-work/DESIGN-SYSTEM.md. */
+@font-face { font-family:Lato; src:url(/maps/vendor/fonts/lato-400-latin.woff2) format('woff2'); font-weight:400; font-display:swap; }
+@font-face { font-family:Lato; src:url(/maps/vendor/fonts/lato-700-latin.woff2) format('woff2'); font-weight:700; font-display:swap; }
+@font-face { font-family:Lato; src:url(/maps/vendor/fonts/lato-900-latin.woff2) format('woff2'); font-weight:900; font-display:swap; }
+@font-face { font-family:Outfit; src:url(/maps/vendor/fonts/outfit-latin.woff2) format('woff2'); font-weight:100 900; font-display:swap; }
+:root { --ink:#111827; --text-2:#374151; --muted:#6B7280; --border:#E5E7EB; --border-2:#D1D5DB; --band:#FAFAFB;
+  --font-ui:Lato,'Helvetica Neue',Arial,sans-serif; --font-brand:Outfit,'Helvetica Neue',Arial,sans-serif; }
+* { box-sizing:border-box; }
+html, body { margin:0; background:#fff; color:var(--ink); font:16px/1.6 var(--font-ui); }
+body { min-height:100vh; min-height:100dvh; display:flex; flex-direction:column; }
+a { color:var(--ink); }
+.obs-header { position:relative; display:flex; align-items:center; justify-content:space-between; gap:16px; height:64px; padding:0 24px; border-bottom:1px solid var(--border); }
+.obs-brand { display:flex; align-items:center; gap:12px; color:var(--ink); text-decoration:none; min-width:0; }
+.obs-logo { display:block; width:36px; height:36px; flex:none; } .obs-logo svg { width:100%; height:100%; display:block; }
+.obs-word { font:400 13.5px/1 var(--font-brand); letter-spacing:.18em; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.obs-nav { display:none; align-self:stretch; gap:28px; }
+.obs-nav a { display:flex; align-items:center; padding-top:2px; font-size:15px; color:var(--text-2); text-decoration:none; border-bottom:2px solid transparent; white-space:nowrap; }
+.obs-nav a:hover { color:var(--ink); }
+@media (min-width:1024px) { .obs-header { padding:0 48px; } .obs-nav { display:flex; } }
+main { flex:1 0 auto; padding:56px 24px; max-width:760px; }
+@media (min-width:768px) { main { padding:72px 48px; } }
+h1 { font:700 30px/1.2 var(--font-ui); margin:0 0 10px; }
+p { margin:0 0 24px; color:var(--text-2); max-width:60ch; }
+.links { display:flex; flex-wrap:wrap; gap:10px 24px; }
+.links a { font-weight:700; font-size:15px; text-decoration:none; }
+.links a:hover { text-decoration:underline; text-underline-offset:3px; }
+.obs-footer { padding:16px 24px 18px; border-top:1px solid var(--border); display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px 24px; font-size:12.5px; color:var(--muted); }
+@media (min-width:768px) { .obs-footer { padding:18px 48px 20px; } }
+.obs-footer a { color:var(--text-2); }
+.obs-footer a.disc { font:700 13.5px/1.2 var(--font-ui); color:var(--ink); text-decoration:none; }
 </style>
 </head>
 <body>
-<header>
-  <a href="/" aria-label="Spatial Data Repository home"><svg viewBox="0 0 100 100" aria-hidden="true"><defs><rect id="bH1" x="2" y="26" width="96" height="16" rx="6"/><rect id="bH2" x="2" y="58" width="96" height="16" rx="6"/><rect id="bV1" x="28" y="2" width="16" height="96" rx="6" transform="rotate(18 36 50)"/><rect id="bV2" x="56" y="2" width="16" height="96" rx="6" transform="rotate(18 64 50)"/><mask id="cH1"><rect width="100" height="100" fill="white"/><use href="#bV1" fill="black" stroke="black" stroke-width="4"/></mask><mask id="cV2"><rect width="100" height="100" fill="white"/><use href="#bH1" fill="black" stroke="black" stroke-width="4"/></mask><mask id="cH2"><rect width="100" height="100" fill="white"/><use href="#bV2" fill="black" stroke="black" stroke-width="4"/></mask><mask id="cV1"><rect width="100" height="100" fill="white"/><use href="#bH2" fill="black" stroke="black" stroke-width="4"/></mask></defs><g fill="#FFFFFF" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#bH1" mask="url(#cH1)"/><use href="#bV2" mask="url(#cV2)"/><use href="#bH2" mask="url(#cH2)"/><use href="#bV1" mask="url(#cV1)"/></g></svg></a>
-  <a class="brand" href="/"><span class="brand-wm">Spatial Data Repository</span><span class="brand-sub">Hyderabad Urban Observatory</span></a>
+<header class="obs-header">
+  <a class="obs-brand" href="https://hyderabad.urbanobservatory.in/" aria-label="Hyderabad Urban Observatory, home"><span class="obs-logo"><svg viewBox="0 0 100 100" aria-hidden="true"><defs><rect id="bH1" x="2" y="26" width="96" height="16" rx="6"/><rect id="bH2" x="2" y="58" width="96" height="16" rx="6"/><rect id="bV1" x="28" y="2" width="16" height="96" rx="6" transform="rotate(18 36 50)"/><rect id="bV2" x="56" y="2" width="16" height="96" rx="6" transform="rotate(18 64 50)"/><mask id="cH1"><rect width="100" height="100" fill="white"/><use href="#bV1" fill="black" stroke="black" stroke-width="4"/></mask><mask id="cV2"><rect width="100" height="100" fill="white"/><use href="#bH1" fill="black" stroke="black" stroke-width="4"/></mask><mask id="cH2"><rect width="100" height="100" fill="white"/><use href="#bV2" fill="black" stroke="black" stroke-width="4"/></mask><mask id="cV1"><rect width="100" height="100" fill="white"/><use href="#bH2" fill="black" stroke="black" stroke-width="4"/></mask></defs><g fill="#FFFFFF" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#bH1" mask="url(#cH1)"/><use href="#bV2" mask="url(#cV2)"/><use href="#bH2" mask="url(#cH2)"/><use href="#bV1" mask="url(#cV1)"/></g></svg></span><span class="obs-word">Hyderabad Urban Observatory</span></a>
+  <nav class="obs-nav" aria-label="Observatory"><a href="https://hyderabad.urbanobservatory.in/maps/">Layers</a><a href="https://hyderabad.urbanobservatory.in/tools/">Tools</a><a href="https://hyderabad.urbanobservatory.in/stories/">Stories</a><a href="https://hyderabad.urbanobservatory.in/data/">Data sources</a><a href="https://hyderabad.urbanobservatory.in/about">About</a></nav>
 </header>
 <main>
   <h1>Page not found</h1>
   <p>There is nothing at this address; the page may have moved or the link may be out of date.</p>
-  <nav aria-label="Where to go instead">
-    <a href="/">Back to the map viewer</a>
-    <a href="https://hyderabad.urbanobservatory.in">Hyderabad Urban Observatory</a>
+  <nav class="links" aria-label="Where to go instead">
+    <a href="https://hyderabad.urbanobservatory.in/maps/">Back to the map viewer</a>
+    <a href="https://hyderabad.urbanobservatory.in/">Observatory home</a>
+    <a href="https://hyderabad.urbanobservatory.in/tools/">Tools</a>
+    <a href="https://hyderabad.urbanobservatory.in/stories/">Stories</a>
   </nav>
 </main>
+<footer class="obs-footer">
+  <span>This website is under continuous development; you may find errors or incomplete content. Feedback: <a href="mailto:hulf.observatory@gmail.com">hulf.observatory@gmail.com</a></span>
+  <a class="disc" href="https://hyderabad.urbanobservatory.in/disclaimer">Disclaimer</a>
+</footer>
 </body>
 </html>
