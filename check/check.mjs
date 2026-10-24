@@ -12,7 +12,7 @@
 //   node check/check.mjs --no-photon  # block photon.komoot.io: exercises the "unavailable" path
 //
 // Fails (exit 1) on: console errors, uncaught exceptions, failed or >=400 requests,
-// requests to hosts other than own origin, the data base (data.hyderabad.urbanobservatory.in),
+// requests to hosts other than own origin, the data base (hyderabad.urbanobservatory.in/data),
 // the tiles Worker (hyd-tiles.hulf-observatory.workers.dev), *.arcgisonline.com
 // (basemaps), photon.komoot.io (place search) and github.com /
 // objects.githubusercontent.com (download redirects), or a layer card showing an error.
@@ -37,7 +37,7 @@ const PORT = FIXTURE ? 8125 : 8126;
 const BASE = urlArg || `http://127.0.0.1:${PORT}/`;
 // where the page reads its catalogue: the live DATA_BASE unless --fixture / --data
 // override it (the page takes the override as ?data=, see js/config.js)
-const DEFAULT_DATA_BASE = 'https://data.hyderabad.urbanobservatory.in/';
+const DEFAULT_DATA_BASE = 'https://hyderabad.urbanobservatory.in/data/';
 const DATA = dataArg || (FIXTURE ? 'check/fixture/' : null);
 const DATA_ABS = DATA ? new URL(DATA, BASE).href : DEFAULT_DATA_BASE;
 const page = (qs = '') => { const q = [DATA && 'data=' + DATA, qs].filter(Boolean).join('&'); return BASE + (q ? '?' + q : ''); };
@@ -85,7 +85,7 @@ const evaluate = async (expr) => {
 const problems = [];
 const origin = new URL(BASE).origin;
 // open-data-scheme.md "Allowed external hosts in the headless check"
-const HOSTS = new Set(['data.hyderabad.urbanobservatory.in', 'hulf-observatory.github.io', 'hyd-tiles.hulf-observatory.workers.dev', 'photon.komoot.io',
+const HOSTS = new Set(['hyderabad.urbanobservatory.in', 'hulf-observatory.github.io', 'hyd-tiles.hulf-observatory.workers.dev', 'photon.komoot.io',
   'github.com', 'objects.githubusercontent.com', new URL(DATA_ABS).hostname]);
 const allowed = (u) => {
   if (u.startsWith('data:') || u.startsWith('blob:') || u === 'about:blank') return true;

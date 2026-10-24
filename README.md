@@ -3,7 +3,7 @@
 The Hyderabad Urban Observatory's map viewer: a static site (vanilla ES modules, no
 build step, MapLibre GL JS 5 and pmtiles.js vendored) that reads the Observatory's
 open data straight from where it is published. Live at
-**https://maps.hyderabad.urbanobservatory.in/** (GitHub Pages, this repo's `main`).
+**https://hyderabad.urbanobservatory.in/maps/** (GitHub Pages, this repo's `main`).
 
 ## Where the data comes from
 
@@ -12,7 +12,7 @@ scheme ([SCHEME.md in hyderabad-data](https://github.com/hulf-observatory/hydera
 
 | | URL | Holds |
 |---|---|---|
-| **D** | `https://data.hyderabad.urbanobservatory.in/` | `layers.json` (the catalogue), vector PMTiles + GeoParquet, legends, `nav/areas.json` |
+| **D** | `https://hyderabad.urbanobservatory.in/data/` | `layers.json` (the catalogue), vector PMTiles + GeoParquet, legends, `nav/areas.json` |
 | **W** | `https://hyd-tiles.hulf-observatory.workers.dev` | raster tiles `/r/<release>/<id>/{z}/{x}/{y}.<ext>`, read from the GitHub Releases of `hulf-observatory/hyderabad-data` |
 
 - `DATA_BASE` (D) is the one constant, in `js/config.js`. Every fetch of
