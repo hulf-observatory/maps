@@ -40,3 +40,11 @@ b, strong { font-weight: 700; }
   .topact button { min-width: 32px; height: 32px; }
   .topact .btn-plain { padding: 0 9px; font-size: 13px; }
 }
+
+/* library and workbench: flat panels — 4 px, hairline, no shadow (decided 24 Oct; popovers and map buttons keep theirs) */
+.col { border-radius: var(--r-ctl); box-shadow: none; border: 1px solid var(--border); }
+@media (max-width: 768px) {
+  .col { border-radius: var(--r-ctl) var(--r-ctl) 0 0; box-shadow: none; border: 0; border-top: 1px solid var(--border); }
+  #library { border-radius: 0; }
+  .col.rail { border-radius: var(--r-ctl); box-shadow: none; border: 1px solid var(--border-2); }
+}
