@@ -8,12 +8,12 @@ open data straight from where it is published. Live at
 ## Where the data comes from
 
 The viewer has no data of its own and no server. Everything follows the open data
-scheme ([SCHEME.md in hyderabad-data](https://github.com/hulf-observatory/hyderabad-data/blob/main/SCHEME.md)):
+scheme ([SCHEME.md in the data repo](https://github.com/hulf-observatory/data/blob/main/SCHEME.md)):
 
 | | URL | Holds |
 |---|---|---|
 | **D** | `https://hyderabad.urbanobservatory.in/data/` | `layers.json` (the catalogue), vector PMTiles + GeoParquet, legends, `nav/areas.json` |
-| **W** | `https://hyd-tiles.hulf-observatory.workers.dev` | raster tiles `/r/<release>/<id>/{z}/{x}/{y}.<ext>`, read from the GitHub Releases of `hulf-observatory/hyderabad-data` |
+| **W** | `https://hyd-tiles.hulf-observatory.workers.dev` | raster tiles `/r/<release>/<id>/{z}/{x}/{y}.<ext>`, read from the GitHub Releases of `hulf-observatory/data` |
 
 - `DATA_BASE` (D) is the one constant, in `js/config.js`. Every fetch of
   `layers.json`, `nav/areas.json`, legend JSON and legend pictures resolves against
